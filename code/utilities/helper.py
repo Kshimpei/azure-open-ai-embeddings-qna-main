@@ -113,7 +113,7 @@ class LLMHelper:
         try:
             documents = self.document_loaders(source_url).load()
             # Convert to UTF-8 encoding for non-ascii text
-            for(document) in documents:
+            
 
             for i, doc in enumerate(docs):
                 # Overlapping content from previous and next pages
@@ -148,7 +148,7 @@ class LLMHelper:
             documents = self.document_loaders(source_url).load()
             
             # Convert to UTF-8 encoding for non-ascii text
-            for(document) in documents:
+            
 
             for i, doc in enumerate(docs):
                 # Overlapping content from previous and next pages
