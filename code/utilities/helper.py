@@ -172,13 +172,19 @@ class LLMHelper:
             
             # 一定の長さでファイルを分割する
             docs = self.text_splitter.split_documents(documents)
-            # Remove half non-ascii character from start/end of doc content (langchain TokenTextSplitter may split a non-ascii character in half)
-            pattern = re.compile(r'[\x00-\x09\x0b\x0c\x0e-\x1f\x7f\u0080-\u00a0\u2000-\u3000\ufff0-\uffff]')  # do not remove \x0a (\n) nor \x0d (\r)
+            # # Remove half non-ascii character from start/end of doc content (langchain TokenTextSplitter may split a non-ascii character in half)
+            # pattern = re.compile(r'[\x00-\x09\x0b\x0c\x0e-\x1f\x7f\u0080-\u00a0\u2000-\u3000\ufff0-\uffff]')  # do not remove \x0a (\n) nor \x0d (\r)
             
-            for(doc) in docs:
-                doc.page_content = re.sub(pattern, '', doc.page_content)
-                if doc.page_content == '':
-                    docs.remove(doc)
+            # for(doc) in docs:
+            #     doc.page_content = re.sub(pattern, '', doc.page_content)
+            #     if doc.page_content == '':
+            #         docs.remove(doc)
+            valid_docs = [doc for doc in docs if re.sub(pattern, '', doc.page_content) != '']
+            for i, doc in enumerate(valid_docs):
+                prev_content = valid_docs[i - 1].page_content[-50:] if i > 0 else ""
+                next_content = valid_docs[i + 1].page_content[:50] if i < len(valid_docs) - 1 else ""
+                doc.page_content = prev_content + doc.page_content + next_content
+
             
             keys = []
             for i, doc in enumerate(docs):
@@ -205,6 +211,7 @@ class LLMHelper:
         except Exception as e:
             logging.error(f"Error adding embeddings for {source_url}: {e}")
             raise e
+
 
     # INFO: textsのところにうまいことpageを載せれば、ページごとにconvertしなくてもいけるのでは？
     def convert_file_and_add_embeddings(self, source_url, filename, enable_translation=False):
