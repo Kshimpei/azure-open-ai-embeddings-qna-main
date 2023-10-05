@@ -124,18 +124,22 @@ class LLMHelper:
             docs = self.text_splitter.split_documents(documents)
             # Remove half non-ascii character from start/end of doc content (langchain TokenTextSplitter may split a non-ascii character in half)
             pattern = re.compile(r'[\x00-\x09\x0b\x0c\x0e-\x1f\x7f\u0080-\u00a0\u2000-\u3000\ufff0-\uffff]')  # do not remove \x0a (\n) nor \x0d (\r)
-            for(doc) in docs:
-                doc.page_content = re.sub(pattern, '', doc.page_content)
-                if doc.page_content == '':
-                    docs.remove(doc)
+            # オーバーラップ実装
+            def process_documents(docs):
+                valid_docs = [doc for doc in docs if re.sub(pattern, '', doc.page_content) != '']
+                for i, doc in enumerate(valid_docs):
+                    prev_content = valid_docs[i - 1].page_content[-50:] if i > 0 else ""
+                    next_content = valid_docs[i + 1].page_content[:50] if i < len(valid_docs) - 1 else ""
+                    doc.page_content = prev_content + doc.page_content + next_content
+                return valid_docs
+            docs = process_documents(docs)
+            #　for(doc) in docs:
+            #    doc.page_content = re.sub(pattern, '', doc.page_content)
+            #    if doc.page_content == '':
+            #        docs.remove(doc)
             
             keys = []
             for i, doc in enumerate(docs):
-                                # オーバーラップ実装
-                prev_content = docs[i - 1].page_content[-50:] if i > 0 else ""
-                next_content = docs[i + 1].page_content[:50] if i < len(docs) - 1 else ""
-                
-                doc.page_content = prev_content + doc.page_content + next_content
                 source_url = source_url.split('?')[0]
                 # Create a unique key for the document
                 filename = "/".join(source_url.split('/')[4:])
@@ -170,6 +174,7 @@ class LLMHelper:
             docs = self.text_splitter.split_documents(documents)
             # Remove half non-ascii character from start/end of doc content (langchain TokenTextSplitter may split a non-ascii character in half)
             pattern = re.compile(r'[\x00-\x09\x0b\x0c\x0e-\x1f\x7f\u0080-\u00a0\u2000-\u3000\ufff0-\uffff]')  # do not remove \x0a (\n) nor \x0d (\r)
+            
             for(doc) in docs:
                 doc.page_content = re.sub(pattern, '', doc.page_content)
                 if doc.page_content == '':
