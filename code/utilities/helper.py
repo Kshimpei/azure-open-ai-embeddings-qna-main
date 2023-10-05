@@ -113,22 +113,33 @@ class LLMHelper:
         try:
             documents = self.document_loaders(source_url).load()
             # Convert to UTF-8 encoding for non-ascii text
+            for(document) in documents:
+                try:
+                    if document.page_content.encode("iso-8859-1") == document.page_content.encode("latin-1"):
+                        document.page_content = document.page_content.encode("iso-8859-1").decode("utf-8", errors="ignore")
+                except:
+                    pass
             
-
+            # 一定の長さでファイルを分割する
+            docs = self.text_splitter.split_documents(documents)
+            # Remove half non-ascii character from start/end of doc content (langchain TokenTextSplitter may split a non-ascii character in half)
+            pattern = re.compile(r'[\x00-\x09\x0b\x0c\x0e-\x1f\x7f\u0080-\u00a0\u2000-\u3000\ufff0-\uffff]')  # do not remove \x0a (\n) nor \x0d (\r)
+            for(doc) in docs:
+                doc.page_content = re.sub(pattern, '', doc.page_content)
+                if doc.page_content == '':
+                    docs.remove(doc)
+            
+            keys = []
             for i, doc in enumerate(docs):
-                # Overlapping content from previous and next pages
-                prev_content = docs[i-1].page_content[-50:] if i > 0 else ""
-                next_content = docs[i+1].page_content[:50] if i < len(docs) - 1 else ""
+                                # オーバーラップ実装
+                prev_content = docs[i - 1].page_content[-50:] if i > 0 else ""
+                next_content = docs[i + 1].page_content[:50] if i < len(docs) - 1 else ""
                 
-                # Add overlapping content to the current page
                 doc.page_content = prev_content + doc.page_content + next_content
-
-                # Existing code (from the provided snippet)
-                # Create a unique key for the document
                 source_url = source_url.split('?')[0]
+                # Create a unique key for the document
                 filename = "/".join(source_url.split('/')[4:])
                 # hash_key = hashlib.sha1(f"{source_url}_{i}".encode('utf-8')).hexdigest()
-
                 hash_key = hashlib.sha1(f"{source_url}-page-{i + 1}".encode()).hexdigest()
                 hash_key = f"doc:{self.index_name}:{hash_key}"
                 keys.append(hash_key)
@@ -148,22 +159,28 @@ class LLMHelper:
             documents = self.document_loaders(source_url).load()
             
             # Convert to UTF-8 encoding for non-ascii text
+            for(document) in documents:
+                try:
+                    if document.page_content.encode("iso-8859-1") == document.page_content.encode("latin-1"):
+                        document.page_content = document.page_content.encode("iso-8859-1").decode("utf-8", errors="ignore")
+                except:
+                    pass
             
-
+            # 一定の長さでファイルを分割する
+            docs = self.text_splitter.split_documents(documents)
+            # Remove half non-ascii character from start/end of doc content (langchain TokenTextSplitter may split a non-ascii character in half)
+            pattern = re.compile(r'[\x00-\x09\x0b\x0c\x0e-\x1f\x7f\u0080-\u00a0\u2000-\u3000\ufff0-\uffff]')  # do not remove \x0a (\n) nor \x0d (\r)
+            for(doc) in docs:
+                doc.page_content = re.sub(pattern, '', doc.page_content)
+                if doc.page_content == '':
+                    docs.remove(doc)
+            
+            keys = []
             for i, doc in enumerate(docs):
-                # Overlapping content from previous and next pages
-                prev_content = docs[i-1].page_content[-50:] if i > 0 else ""
-                next_content = docs[i+1].page_content[:50] if i < len(docs) - 1 else ""
-                
-                # Add overlapping content to the current page
-                doc.page_content = prev_content + doc.page_content + next_content
-
-                # Existing code (from the provided snippet)
                 # Create a unique key for the document
                 source_url = source_url.split('?')[0]
                 filename = "/".join(source_url.split('/')[4:])
                 # hash_key = hashlib.sha1(f"{source_url}_{i}".encode('utf-8')).hexdigest()
-
                 hash_key = hashlib.sha1(f"{source_url}-page-{i + 1}".encode()).hexdigest()
                 hash_key = f"doc:{self.index_name}:{hash_key}"
                 keys.append(hash_key)
