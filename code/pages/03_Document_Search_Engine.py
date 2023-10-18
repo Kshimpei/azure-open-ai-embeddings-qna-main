@@ -15,13 +15,6 @@ def main():
 
     st.title("Document Search Engine (Technical Proof-of-Concept Prototype)")
 
-    st.write(
-        "When you enter and search for a keyword, "
-        "you can find topics in the ShopManual that are semantically similar. "
-        "This prototype was created to give you a basic experience of what AI can do. "
-        "Please note that it may be significantly different from the actual service."
-    )
-
     query = st.text_input("Enter a keyword:", value=SEARCH_QUERY["search_query"])
 
     # 検索ボタン
@@ -39,6 +32,17 @@ def main():
             st.write(f"### {title}")
             st.write(f"{result['page_content']}")
             st.write("---")
+
+    st.markdown("---")
+    st.subheader("Capabilities:")
+    st.write("- Find a ShopManual page from vague search keywords.")
+    st.write("- Click on the search results to jump to the corresponding PDF page and verify its content (loading the PDF might take some time).")
+
+    st.subheader("Limitations:")
+    st.write("- Being a prototype, it uses a generic user interface which may be slightly hard to read.")
+    st.write("- Search results are displayed as 'filename + page number', which can be confusing. Ideally, the title should be displayed.")
+
+    st.info("Please note: This system is an experimental prototype designed to provide a sense of the potential of AI-based searches. It might differ significantly from the actual service.")
 
 if __name__ == "__main__":
     main()
