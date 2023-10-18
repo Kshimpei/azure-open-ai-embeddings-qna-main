@@ -13,23 +13,29 @@ pattern = r'(\S)p\.(\d+)'
 def main():
     llm_helper = LLMHelper(custom_prompt="", temperature=0.0)
 
-    st.title("文章検索エンジン v2")
+    st.title("Document Search Engine (Technical Proof-of-Concept Prototype)")
 
-    query = st.text_input("キーワードを入力してください", value=SEARCH_QUERY["search_query"])
+    st.write(
+        "When you enter and search for a keyword, "
+        "you can find topics in the ShopManual that are semantically similar. "
+        "This prototype was created to give you a basic experience of what AI can do. "
+        "Please note that it may be significantly different from the actual service."
+    )
 
+    query = st.text_input("Enter a keyword:", value=SEARCH_QUERY["search_query"])
 
     # 検索ボタン
-    if st.button("検索"):
+    if st.button("Search"):
         st.session_state['question'], \
         st.session_state['response'], \
         st.session_state['context'], \
         st.session_state['sources'], \
         st.session_state['search_engine_results'] = llm_helper.get_semantic_answer_lang_chain_search_engine(query, [])
         
-        st.write("検索結果：")
+        st.write("Search results:")
         
         for result in st.session_state['search_engine_results']:
-            title = re.sub(pattern, r'\1 \2ページ', result['source'])
+            title = re.sub(pattern, r'\1 page \2', result['source'])
             st.write(f"### {title}")
             st.write(f"{result['page_content']}")
             st.write("---")
